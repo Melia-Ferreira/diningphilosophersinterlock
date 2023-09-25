@@ -4,6 +4,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
 public class Philosopher
         extends Thread {
 
@@ -25,15 +26,15 @@ public class Philosopher
         while (running) {
             try {
                 think();
-                myLeftStick.take();
-                // think(); // Pour augmenter la probabilité d'interblocage
-                myRightStick.take();
-                // success : process
-                eat();
-                // release resources
-                myLeftStick.release();
-                myRightStick.release();
-                // try again
+                if (tryTakeStick(myLeftStick)) {
+                    if (tryTakeStick(myRightStick)) {
+                        eat();
+                        myLeftStick.release();
+                        myRightStick.release();
+                    } else {
+                        myLeftStick.release();
+                    }
+                }
             } catch (InterruptedException ex) {
                 Logger.getLogger("Table").log(Level.SEVERE, "{0} Interrupted", this.getName());
             }
@@ -58,5 +59,16 @@ public class Philosopher
         System.out.println(this.getName() + " Starts Eating for:" + delay + " ms");
         sleep(delay); // Le thread peut être interrompu ici
         System.out.println(this.getName() + " Stops Eating");
+    }
+
+    private boolean tryTakeStick(ChopStick stick) throws InterruptedException {
+        int delay = myRandom.nextInt(100 + DELAY);
+        boolean succes = stick.take(delay);
+        if (succes) {
+            System.out.println(this.getName() + " took " + stick);
+        } else {
+            System.out.println(this.getName() + " could not take " + stick);
+        }
+        return succes;
     }
 }

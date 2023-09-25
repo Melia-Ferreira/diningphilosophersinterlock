@@ -1,6 +1,11 @@
 package diningphilosophers;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class ChopStick {
+
+    private final Lock stick = new ReentrantLock();
 
     private static int stickCount = 0;
 
@@ -11,21 +16,13 @@ public class ChopStick {
         myNumber = ++stickCount;
     }
 
-    synchronized public void take() throws InterruptedException {
-        while (!iAmFree) {
-            wait();
-        }
-        // assert iAmFree;
-        iAmFree = false;
-        System.out.println("Stick " + myNumber + " Taken");
-        // Pas utile de faire notifyAll ici, personne n'attend qu'elle soit occupée
+    synchronized public void release() {
+        stick.unlock();
+        System.out.println("Stick " + myNumber + " Released");
     }
 
-    synchronized public void release() {
-        // assert !iAmFree;
-        System.out.println("Stick " + myNumber + " Released");
-        iAmFree = true;
-        notifyAll(); // On prévient ceux qui attendent que la baguette soit libre
+    synchronized public boolean take(int delay) throws InterruptedException {
+        return stick.tryLock();
     }
 
     @Override
